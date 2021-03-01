@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+ <head>
+    <title>My Page</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body>
+	<div id='node_list'>
+		<div><p>Активные ноды</p></div>
+			<ul id='all_nodes'>
+		
+			</ul>
+	</div>
+	<div id='main'>
+			<div>
+					<img src="img/icon.png">
+					<select id='session_num' onchange="">
+							<option value="sendall">sendall</option>
+					</select>
+					<input id="command" type="text">
+					<input id='request_button' type="button" onclick="read_command()" value='Send'>
+			</div>
+
+			<div id='data_block'>
+				<div><p>Результаты</p></div>
+				<div id='data'>
+					
+				</div>
+			</div>
+	</div>
+</body>
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript" src="js/eel_to_js.js"></script>
+</html>
