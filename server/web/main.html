@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
  <head>
-    <title>My Page</title>
+    <title>RDP</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
@@ -14,18 +14,27 @@
 	<div id='main'>
 			<div>
 					<img src="img/icon.png">
-					<select id='session_num' onchange="">
+					<select id='session_num' onchange="change_header(this)">
 							<option value="sendall">sendall</option>
 					</select>
-					<input id="command" type="text">
+					<input id="command" type="text" placeholder="command line">
 					<input id='request_button' type="button" onclick="read_command()" value='Send'>
 			</div>
 
 			<div id='data_block'>
-				<div><p>Результаты</p></div>
-				<div id='data'>
-					
-				</div>
+					<div><p>Результаты</p></div>
+					<div id='data_board'>
+							<div id='data_header'>
+									<span></span>
+									<span style='float: right; opacity: 0'>
+											<button onclick="send_command('help')">help</button>
+											<button onclick="send_command('screen_stream')">stream</button>
+											<button onclick="send_command('screenshot')">screenshot</button>
+											<button onclick="send_command('upload')">upload</button>
+									</span>
+							</div>
+							<div id='data'></div>
+					</div>
 			</div>
 	</div>
 </body>

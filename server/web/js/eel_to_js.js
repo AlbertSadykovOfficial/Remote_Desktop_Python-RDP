@@ -1,4 +1,14 @@
- function read_command()
+function send_command(command)
+{
+		let session_num = document.getElementById('session_num').value;
+
+		if (session_num !== 'sendall')
+        eel.solo_command(session_num, command);
+    else
+    	output('Для данного действия следует выбрать удаленный узел')
+}
+
+function read_command()
 {
     let session_num = document.getElementById('session_num').value;
     let command = document.getElementById('command').value;
@@ -9,24 +19,31 @@
         eel.solo_command(session_num, command);
 }
 
+function open_folder(folder)
+{
+	let session_num = document.getElementById('session_num').value;
+	eel.solo_command(session_num, 'cd ' + folder);
+}
+
 eel.expose(output);
 function output(data)
 {		
-		document.getElementById('data').innerHTML = '<h1>'+data+'</h1>';
+		document.getElementById('data').innerHTML = "<ul>" + data + "</ul>";
 }
 
 eel.expose(output_catalog);
 function output_catalog(data)
 {	
-		context = '';
+		apps = '';
+		folders = "<li ondblclick=open_folder('..')><img src='img/folder.png'>..</li>";
 		for(i = 0; i < data.length; i++)
 		{
 				if (data[i].includes('.'))
-					context += "<li>" + data[i] + "</li>";
+					apps += "<li>" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
 				else
-					context += "<li><img src='img/folder.png'>" + data[i] + "</li>";
+					folders += "<li ondblclick=open_folder('"+String(data[i])+"')><img src='img/folder.png'>" + data[i] + "</li>";
 		}
-		document.getElementById('data').innerHTML = "<ul>" + context + "</ul>";
+		document.getElementById('data').innerHTML = "<ul>" + folders + apps + "</ul>";
 }
 eel.expose(added_new_node);
 function added_new_node(num, ip, meta)
@@ -46,4 +63,22 @@ function added_new_node(num, ip, meta)
 				context += "<li>--- " + meta[i] + "</li>";
 		}
 		document.getElementById('data').innerHTML = '<ul>'+context+'</ul>';
+}
+
+function change_header(element)
+{
+		nodes = element.children
+		if (element.value !== 'sendall')
+		{
+				document.getElementById('data_header').children[1].style.opacity = '1';
+				for (i=0; i<nodes.length; i++)
+				{
+					  if (nodes[i].getAttribute('id') == 'ul_session_'+element.value)
+						 document.getElementById('data_header').children[0].innerHTML = nodes[i].innerHTML;
+						console.log(nodes[i].innerHTML)
+				}
+		} else {
+				document.getElementById('data_header').children[1].style.opacity = '0';
+				document.getElementById('data_header').children[0].innerHTML = 'sendall'
+		}
 }

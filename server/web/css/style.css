@@ -1,9 +1,11 @@
 body {
+		overflow-y: hidden;
 		background-color: rgb(36,36,36);
 		font-family: Stolzl;
 		padding: 0px;
 		margin: 0px;
 }
+
 input	{
 		color: rgb(238,238,238);
 }
@@ -24,7 +26,7 @@ ul {
 		vertical-align: top;
 		width: 30%; 
 		background-color: rgb(14,14,14);
-		height: 600px;
+		height: 800px;
 }
 
 #node_list > div {
@@ -70,29 +72,6 @@ ul {
     border-radius: 10px;
     padding: 5px;
 }
-#request_button{
-		background-color: rgb(8,161,102);
-		color: black;
-		border:none;
-		border-radius: 10px;
-}
-
-#data_block {
-		font-size: 26px;
-		color: rgb(238,238,238);
-		margin: 0px;
-}
-#data {
-	background-color: rgb(26,26,26);
-	height: 500px;
-	border-radius: 10px;
-	margin-top: -15px;
-}
-
-#data img {
-		width: 5%;
-    vertical-align: bottom;
-}
 
 #session_num {
 		background-color: rgb(8,161,102);
@@ -101,6 +80,7 @@ ul {
 	  padding: 3px;
     margin-left: 5px;
 	  font-size: 16px;
+	  cursor: pointer;
 }
 
 #command {
@@ -114,4 +94,59 @@ ul {
 	border-width: 1px;
 	border-color: rgb(8,161,102);
 	background-color: rgb(14,14,14);
+}
+
+#request_button{
+		background-color: rgb(8,161,102);
+		color: black;
+		border:none;
+		border-radius: 10px;
+		cursor: pointer;
+}
+
+#data_block {
+		font-size: 26px;
+		color: rgb(238,238,238);
+		margin: 0px;
+}
+#data_board {
+		background-color: rgb(26,26,26);
+		height: 500px;
+		border-radius: 10px;
+		margin-top: 15px;
+}
+#data > ul {
+		max-height: 440px;
+		overflow: auto;
+		margin-block-start: 0;
+		margin-block-end: 0;
+		cursor: pointer;
+}
+
+#data span {
+		color: rgb(250, 55, 55);
+}
+
+#data img {
+		width: 5%;
+    vertical-align: bottom;
+}
+
+#data_header {
+		padding: 10px 20px;
+		border-bottom: 1px solid red;
+}
+
+#data_header span > button {
+		border:none;
+		outline: none;
+		background: none;
+		color: rgb(8,161,102);
+}
+#data_header span > button:hover {
+		background-color: rgb(255,149,0);
+		color: black;
+		cursor: pointer;
+		box-shadow: 3px 3px 5px 5px rgba(0,0,0,0.3);
+		transition: 0.2s;
 }

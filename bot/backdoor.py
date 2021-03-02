@@ -57,7 +57,7 @@ def upload_file(file_name):
 
 def download_file(file_name):
     # Файл бинарный, поэтому нужно исп wb
-    f = open(file_name, 'wb')
+    f = open('download/' + file_name, 'wb')
     # Чтобы обнаржуить окончание загрузки файла
     # выставляем таймаут
     # Если файл закочится, цикл завершится
