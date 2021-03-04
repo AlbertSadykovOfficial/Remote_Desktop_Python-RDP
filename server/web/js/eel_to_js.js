@@ -5,7 +5,7 @@ function send_command(command)
 		if (session_num !== 'sendall')
         eel.solo_command(session_num, command);
     else
-    	output('Для данного действия следует выбрать удаленный узел')
+    		output('Для данного действия следует выбрать удаленный узел')
 }
 
 function read_command()
@@ -21,8 +21,8 @@ function read_command()
 
 function open_folder(folder)
 {
-	let session_num = document.getElementById('session_num').value;
-	eel.solo_command(session_num, 'cd ' + folder);
+		let session_num = document.getElementById('session_num').value;
+		eel.solo_command(session_num, 'cd ' + folder);
 }
 
 eel.expose(output);
@@ -32,7 +32,6 @@ function output(data)
 }
 
 eel.expose(output_catalog);
-
 function output_catalog(data)
 {	
 		apps = '';
@@ -40,9 +39,9 @@ function output_catalog(data)
 		for(i = 0; i < data.length; i++)
 		{
 				if (data[i].includes('.'))
-					apps += "<li oncontextmenu=\"menu('"+data[i]+"'); return false; \">" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
+						apps += "<li oncontextmenu=\"menu('"+data[i]+"'); return false; \">" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
 				else
-					folders += "<li ondblclick=open_folder('"+String(data[i])+"')><img src='img/folder.png'>" + data[i] + "</li>";
+						folders += "<li ondblclick=open_folder('"+String(data[i])+"')><img src='img/folder.png'>" + data[i] + "</li>";
 		}
 		document.getElementById('data').innerHTML = "<ul>" + folders + apps + "</ul>";
 }
@@ -54,7 +53,7 @@ function download_file(name)
 		if (session_num !== 'sendall')
         eel.solo_command(session_num, 'download ' + name);
     else
-    	output('Для данного действия следует выбрать удаленный узел')
+    		output('Для данного действия следует выбрать удаленный узел')
 }
 
 function menu(name)
@@ -71,27 +70,34 @@ function menu(name)
               "</ul>"+
           "</div>";
 
-		document.getElementById('main').insertAdjacentHTML('afterBegin',content);
-		document.getElementsByClassName('menu')[0].style = 'margin-left:'+event.pageX+'px; '+'margin-top:'+event.pageY+'px';
+		document.getElementsByTagName('body')[0].insertAdjacentHTML('afterBegin', content);
+		document.getElementsByClassName('menu')[0].style = 'margin-left:' + event.pageX + 10 + 'px; ' + ' margin-top:' + event.pageY - 10 + 'px';
 }
 
 eel.expose(added_new_node);
 function added_new_node(num, ip, meta)
 {
+	// meta[4] - Сететвое имя компьютера в  пришедшем списке
     context = "<li id='ul_session_"+num+
 			"'><img src='img/green_circle.png'>Session " + num + " --- " + ip + 
-			" (" + meta[1] + 
+			" (" + meta[4] + 
 		")</li>";
 		document.getElementById('all_nodes').insertAdjacentHTML('beforeEnd', context);
 		
-		context = "<option id='select_session_"+num+"' value="+num+">"+meta[1]+"</option>";
+		context = "<option id='select_session_"+num+"' value="+num+">"+meta[4]+"</option>";
 		document.getElementById('session_num').insertAdjacentHTML('beforeEnd', context);
 
-		for(i = 0; i < meta.length; i++)
-		{
-				context += "<li>--- " + meta[i] + "</li>";
-		}
-		document.getElementById('data').innerHTML = '<ul>'+context+'</ul>';
+		print_list_to_html(meta)
+}
+eel.expose(print_list_to_html)
+function print_list_to_html(meta)
+{			
+			context = '';
+			for(i = 0; i < meta.length; i++)
+			{
+					context += "<li> " + meta[i] + "</li>";
+			}
+			document.getElementById('data').innerHTML = '<ul>'+context+'</ul>';
 }
 
 eel.expose(delete_node);
@@ -120,4 +126,10 @@ function change_header(element)
 				document.getElementById('data_header').children[1].style.opacity = '0';
 				document.getElementById('data_header').children[0].innerHTML = 'sendall'
 		}
+}
+
+eel.expose(alert_message);
+function alert_message(message)
+{
+		alert(message);
 }

