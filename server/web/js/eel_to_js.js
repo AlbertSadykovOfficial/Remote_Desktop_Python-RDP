@@ -39,39 +39,11 @@ function output_catalog(data)
 		for(i = 0; i < data.length; i++)
 		{
 				if (data[i].includes('.'))
-						apps += "<li oncontextmenu=\"menu('"+data[i]+"'); return false; \">" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
+						apps += "<li oncontextmenu=\"menu('file', '"+data[i]+"'); return false; \">" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
 				else
-						folders += "<li ondblclick=open_folder('"+String(data[i])+"')><img src='img/folder.png'>" + data[i] + "</li>";
+						folders += "<li oncontextmenu=\"menu('folder', '"+data[i]+"'); return false\" ondblclick=\"open_folder('"+data[i]+"')\"><img src='img/folder.png'>" + data[i] + "</li>";
 		}
 		document.getElementById('data').innerHTML = "<ul>" + folders + apps + "</ul>";
-}
-
-function download_file(name)
-{
-		let session_num = document.getElementById('session_num').value;
-
-		if (session_num !== 'sendall')
-        eel.solo_command(session_num, 'download ' + name);
-    else
-    		output('Для данного действия следует выбрать удаленный узел')
-}
-
-function menu(name)
-{
-		if (document.getElementsByClassName('menu').length != 0)
-		{
-		  	document.getElementsByClassName('menu')[0].remove();
-		}
-
-    content = "<div class='menu'>"+
-          "<span></span><button class='close_button' onclick=\"document.getElementsByClassName(\'menu\')[0].remove()\"><img src='img/close.png'></button>"+
-              "<ul>"+
-                  "<li onclick=\"download_file(\'"+name+"\'); document.getElementsByClassName(\'menu\')[0].remove()\">Скачать файл</li>"+
-              "</ul>"+
-          "</div>";
-
-		document.getElementsByTagName('body')[0].insertAdjacentHTML('afterBegin', content);
-		document.getElementsByClassName('menu')[0].style = 'margin-left:' + event.pageX + 10 + 'px; ' + ' margin-top:' + event.pageY - 10 + 'px';
 }
 
 eel.expose(added_new_node);
@@ -132,4 +104,10 @@ eel.expose(alert_message);
 function alert_message(message)
 {
 		alert(message);
+}
+
+function close_program()
+{
+		eel.common_command('exit');
+		window.open('x.html', '_self').close();
 }
