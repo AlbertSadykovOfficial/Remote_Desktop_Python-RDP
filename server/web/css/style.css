@@ -85,7 +85,7 @@ ul {
 .menu > span
 {
 		display: inline-block;
-		width: 85%;
+		width: 80%;
 }
 .menu > button
 {
@@ -104,8 +104,28 @@ ul {
 		margin: 5px;
 		text-align: center;
 }
-
+.menu li:hover
+{
+		background-color: rgba(255,255,255,0.05);
+}
 /*    -------------------- menu ----------------------*/
+
+#right_column {
+		display: inline-block; 
+		vertical-align: top;
+		width: 9%;
+}
+#close_program {
+    margin-top: 30px !important;
+    background-color: rgba(255,0,0,0.7);
+    border-radius: 40px;
+    text-align: center;
+    color: black;
+}
+#close_program img{
+		max-width: 40%
+}
+
 #session_num {
 		background-color: rgb(8,161,102);
 		border: none;

