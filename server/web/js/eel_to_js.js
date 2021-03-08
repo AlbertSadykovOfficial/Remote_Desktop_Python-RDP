@@ -30,18 +30,24 @@ function output(data)
 {		
 		document.getElementById('data').innerHTML = "<ul>" + data + "</ul>";
 }
-
 eel.expose(output_catalog);
 function output_catalog(data)
-{	
+{
+		console.log("folders: " + JSON.parse(data)[0]);
+		console.log("files: " + JSON.parse(data)[1]);
+		//console.log("files: " + JSON.parse(data));
 		apps = '';
 		folders = "<li ondblclick=open_folder('..')><img src='img/folder.png'>..</li>";
-		for(i = 0; i < data.length; i++)
+		for(i = 0; i < JSON.parse(data)[0].length; i++)
 		{
-				if (data[i].includes('.'))
-						apps += "<li oncontextmenu=\"menu('file', '"+data[i]+"'); return false; \">" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
+						folders += "<li oncontextmenu=\"menu('folder', '"+JSON.parse(data)[0][i]+"'); return false\" ondblclick=\"open_folder('"+JSON.parse(data)[0][i]+"')\"><img src='img/folder.png'>" + JSON.parse(data)[0][i] + "</li>";
+		}
+		for(i = 0; i < JSON.parse(data)[1].length; i++)
+		{
+				if (JSON.parse(data)[1][i].includes('.'))
+						apps += "<li oncontextmenu=\"menu('file', '"+JSON.parse(data)[1][i]+"'); return false; \">" + JSON.parse(data)[1][i].split('.')[0] + ".<span>" + JSON.parse(data)[1][i].split('.')[1] + "</span></li>";
 				else
-						folders += "<li oncontextmenu=\"menu('folder', '"+data[i]+"'); return false\" ondblclick=\"open_folder('"+data[i]+"')\"><img src='img/folder.png'>" + data[i] + "</li>";
+						apps += "<li oncontextmenu=\"menu('file', '"+JSON.parse(data)[1][i]+"'); return false; \">" + JSON.parse(data)[1][i].split('.')[0] + "</li>";
 		}
 		document.getElementById('data').innerHTML = "<ul>" + folders + apps + "</ul>";
 }
@@ -109,5 +115,25 @@ function alert_message(message)
 function close_program()
 {
 		eel.common_command('exit');
-		window.open('x.html', '_self').close();
+		window.open('close.html', '_self').close();
 }
+
+/*
+
+eel.expose(output_catalog);
+function output_catalog(data)
+{	
+		apps = '';
+		folders = "<li ondblclick=open_folder('..')><img src='img/folder.png'>..</li>";
+		for(i = 0; i < data.length; i++)
+		{
+				if (data[i].includes('.'))
+						apps += "<li oncontextmenu=\"menu('file', '"+data[i]+"'); return false; \">" + data[i].split('.')[0] + ".<span>" + data[i].split('.')[1] + "</span></li>";
+				else
+						folders += "<li oncontextmenu=\"menu('folder', '"+data[i]+"'); return false\" ondblclick=\"open_folder('"+data[i]+"')\"><img src='img/folder.png'>" + data[i] + "</li>";
+		}
+		document.getElementById('data').innerHTML = "<ul>" + folders + apps + "</ul>";
+}
+
+
+*/
