@@ -74,15 +74,13 @@ def upload(name):
         s.send(f.read())
         f.close()
 
-
 def download(object_type, name):
     # Файл бинарный, поэтому нужно исп wb 
     if (object_type == 'file'):
         f = open(name, 'wb')
     elif (object_type == 'folder'):
         f = open(name + '.zip', 'wb')
-    # Чтобы обнаржуить окончание загрузки файла
-    # выставляем таймаут
+    # Чтобы обнаружить окончание загрузки файла выставляем таймаут
     # Если файл закочится, цикл завершится
     s.settimeout(1)
     chunk = s.recv(1024)
