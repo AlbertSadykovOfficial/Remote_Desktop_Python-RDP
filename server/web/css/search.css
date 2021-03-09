@@ -1,0 +1,32 @@
+#session_num {
+		background-color: rgb(8,161,102);
+		border: none;
+		border-radius: 10px;
+	  padding: 3px;
+    margin-left: 5px;
+	  font-size: 16px;
+	  cursor: pointer;
+}
+
+#command {
+		font-size: 16px;
+		padding: 5px;
+		width: 60%;
+
+		border: none;
+		border-radius: 10px;
+		border-width: 1px;
+		border-color: rgb(8,161,102);
+}
+
+#command:hover {
+		box-shadow: 1px 1px 1px rgb(133, 57, 200);
+}
+
+#command:focus {
+		box-shadow: 1px 1px 1px rgb(133, 57, 200);
+}
+
+#request_button {
+		padding: 5px;
+}

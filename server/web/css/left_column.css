@@ -1,0 +1,32 @@
+#node_list {
+		display: inline-block;
+		vertical-align: top;
+		width: 30%; 
+		background-color: rgb(14,14,14);
+		height: 800px;
+}
+
+#node_list > div {
+		background-color: rgb(255,149,0);
+		border-radius: 10px;
+		margin-left: -30px;
+		margin-top: 10%;
+		width: 75%;
+		height: 5%;
+}
+#node_list > div > p {
+		font-size: 24px;
+    margin-left: 50px;
+}
+#node_list img {
+		margin-left: 5px;
+		margin-right: 5px;
+}
+
+#all_nodes{
+		list-style: none;
+		color: rgb(238,238,238);
+}
+#all_nodes >li:hover {
+		background-color: rgba(255,255,255,0.05);
+}

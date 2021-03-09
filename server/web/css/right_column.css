@@ -1,0 +1,21 @@
+#right_column {
+	display: inline-block; 
+	vertical-align: top;
+	width: 9%;
+}
+
+#close_program {
+    width: 50% !important;
+    float: right !important;
+    background-color: rgba(255,0,0,0.7) !important;  
+    border-radius: 40px !important;
+    text-align: center !important;
+    color: black !important;
+}
+#close_program:hover {
+    -moz-box-shadow:0 0 20px rgb(255,0,0);
+    -webkit-box-shadow:0 0 20px rgb(255,0,0);
+    box-shadow: 4px 5px 5px rgb(255, 0, 0);
+    color: red !important;
+    cursor: pointer;
+}
