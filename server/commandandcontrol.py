@@ -29,7 +29,7 @@ eel.init('web')
 targets = []
 ips = []
 
-SERVER_IP = '127.0.0.1'
+SERVER_IP = '192.168.1.157'#'127.0.0.1'
 SERVER_PORT = 5555
 
 STOP_FLAG = False
@@ -133,20 +133,33 @@ def reliable_send(target, data):
 		jsondata = json.dumps(data)
 		target.send(jsondata.encode()) # В python3 - нужен encode
 
+def exists(name):
+		if (os.path.exists(name) == False):
+				f = open('ERROR_DOESNT_EXIST.txt', 'a+')
+				f.write('ERROR FILE or FOLDER DOESNT EXIST')
+				f.close()
+				f = open('ERROR_DOESNT_EXIST.txt', 'rb')
+				target.send(f.read())
+				f.close()
+				os.remove('ERROR_DOESNT_EXIST.txt')
+				eel.alert_message('Такого файла/каталога не существует, был загружен шаблон Ошибки')
+				return False
+		return True
 # Загрузить файл на комп назначения
 def upload(target, name):
     # Файл бинарный, поэтому нужно исп rb
-		if (os.path.isdir(name)):
-				shutil.make_archive('archive_' + name, 'zip', name)
-				f = open('archive_' + name + '.zip', 'rb')
-				target.send(f.read())
-				f.close()
-				os.remove('archive_' + name + '.zip')
-		else:
-				f = open(name, 'rb')
-				target.send(f.read())
-				f.close()
-		eel.alert_message('Файл успешно загружен')
+		if (exists(name)):
+				if (os.path.isdir(name)):
+						shutil.make_archive('archive_' + name, 'zip', name)
+						f = open('archive_' + name + '.zip', 'rb')
+						target.send(f.read())
+						f.close()
+						os.remove('archive_' + name + '.zip')
+				else:
+						f = open(name, 'rb')
+						target.send(f.read())
+						f.close()
+				eel.alert_message('Файл успешно загружен')
 
 def download(target, object_type, name):
 		global COUNT
