@@ -1,5 +1,7 @@
 # Remote Desktop Python RDP
 
+![alt text](https://github.com/AlbertSadykovOfficial/Remote_Desktop_Python-RDP/blob/main/server/web/favicon.ico) 
+
 В состав входит: 
 
 :white_check_mark: Клиент и сервер
